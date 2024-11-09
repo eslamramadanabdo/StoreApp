@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Scopes\StoreScope; 
 use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+
+
 
 class Product extends Model
 {
@@ -80,6 +83,31 @@ class Product extends Model
     // create relation with table tags  (one product has many tages)
     public function tags(){
         return $this->belongsToMany(Tag::class , 'product_tag','product_id','tag_id','id','id');
+    }
+
+
+    public function scopeActive(Builder $builder ){
+        $builder->where('status' , '=' , 'active');
+    }
+
+
+    // accessors
+        // return image url
+    public function getImageUrlAttribute(){
+         if(!$this->image){
+            return "https://www.incathlab.com/images/products/default_product.png";
+         }
+         if(Str::startsWith($this->image, ['http://' , 'https://']  )){
+            return $this->image;
+         }
+         if(Str::startsWith($this->image, ['uploades']  )){
+            return asset('storage/' . $this->image);
+         }
+    }
+
+    // return sale after calculate discount 
+    public function getSalePercentAttribute(){
+        return intval(( ( $this->compare_price - $this->price)/ $this->price ) * 100)  ; 
     }
 
 }
